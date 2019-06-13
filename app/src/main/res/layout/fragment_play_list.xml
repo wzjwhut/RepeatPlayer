@@ -11,7 +11,7 @@
         style="@style/MP.Theme.Widget.Divider.Line.Vertical"
         />
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.appcompat.widget.RecyclerView
         style="@style/MP.Theme.Widget.RecyclerView"
         android:layout_below="@+id/divider"
         android:paddingTop="@dimen/mp.padding.large"

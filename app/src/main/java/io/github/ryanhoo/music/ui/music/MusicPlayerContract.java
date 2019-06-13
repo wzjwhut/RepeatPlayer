@@ -1,7 +1,7 @@
 package io.github.ryanhoo.music.ui.music;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import io.github.ryanhoo.music.data.model.Song;
 import io.github.ryanhoo.music.player.PlayMode;
 import io.github.ryanhoo.music.player.PlaybackService;

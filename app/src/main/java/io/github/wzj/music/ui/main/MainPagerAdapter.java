@@ -1,8 +1,9 @@
 package io.github.wzj.music.ui.main;
 
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
+
 import io.github.ryanhoo.music.ui.base.BaseFragment;
 
 public class MainPagerAdapter extends FragmentPagerAdapter {

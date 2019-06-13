@@ -15,7 +15,7 @@
         android:layout_marginBottom="@dimen/mp.divider.line"
         />
 
-    <android.support.v7.widget.AppCompatImageView
+    <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/image_view_file"
         android:layout_width="40dp"
         android:layout_height="40dp"

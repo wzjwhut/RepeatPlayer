@@ -4,11 +4,13 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 
+import androidx.viewpager.widget.ViewPager;
+
 /**
  * Created by Administrator on 2018/5/31/031.
  */
 
-public class NoScrollViewPager extends android.support.v4.view.ViewPager {
+public class NoScrollViewPager extends ViewPager {
     private boolean noScroll = true;
 
     public NoScrollViewPager(Context context, AttributeSet attrs) {

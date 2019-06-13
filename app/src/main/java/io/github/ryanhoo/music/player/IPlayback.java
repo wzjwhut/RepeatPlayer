@@ -1,6 +1,6 @@
 package io.github.ryanhoo.music.player;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import io.github.ryanhoo.music.data.model.PlayList;
 import io.github.ryanhoo.music.data.model.Song;
 

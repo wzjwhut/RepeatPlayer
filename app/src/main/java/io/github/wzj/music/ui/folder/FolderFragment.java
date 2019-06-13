@@ -2,8 +2,8 @@ package io.github.wzj.music.ui.folder;
 
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.util.Log;
 import android.view.*;
 import android.widget.AdapterView;
@@ -79,6 +79,7 @@ public class FolderFragment extends BaseFragment  implements MusicPlayerContract
     private List<FileDetail> getFileList(String path){
         List<FileDetail> folders;
         File rootFile = new File(path);
+        logger.error("path:{}", path);
         if(rootFile.isDirectory()){
             File[] files = rootFile.listFiles(new FileFilter() {
                 @Override

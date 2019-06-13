@@ -5,8 +5,8 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -785,6 +785,7 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
 
         // Step 1: Song name and artist
         textViewName.setText(song.getDisplayName());
+        logger.info("display name:{}", song.getDisplayName());
         textViewArtist.setText(song.getArtist());
         // Step 2: favorite
         buttonFavoriteToggle.setImageResource(song.isFavorite() ? R.drawable.ic_favorite_yes : R.drawable.ic_favorite_no);

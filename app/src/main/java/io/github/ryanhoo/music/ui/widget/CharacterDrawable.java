@@ -3,9 +3,10 @@ package io.github.ryanhoo.music.ui.widget;
 import android.content.Context;
 import android.graphics.*;
 import android.graphics.drawable.Drawable;
-import android.support.annotation.ColorInt;
-import android.support.annotation.DimenRes;
-import android.support.annotation.Dimension;
+
+import androidx.annotation.ColorInt;
+import androidx.annotation.DimenRes;
+import androidx.annotation.Dimension;
 
 /**
  * Created with Android Studio.
@@ -92,7 +93,7 @@ public class CharacterDrawable extends Drawable {
     @Override
     public int getOpacity() {
         // TODO
-        return 0;
+        return PixelFormat.UNKNOWN;
     }
 
     // Getters & Setters

@@ -2,8 +2,8 @@ package io.github.ryanhoo.music.utils;
 
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import android.view.View;
 import io.github.wzj.music.R;
 import io.github.ryanhoo.music.ui.widget.CharacterDrawable;

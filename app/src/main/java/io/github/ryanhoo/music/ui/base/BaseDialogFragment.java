@@ -1,9 +1,10 @@
 package io.github.ryanhoo.music.ui.base;
 
 import android.graphics.Point;
-import android.support.v4.app.DialogFragment;
 import android.view.Window;
 import android.view.WindowManager;
+
+import androidx.fragment.app.DialogFragment;
 
 /**
  * Created with Android Studio.

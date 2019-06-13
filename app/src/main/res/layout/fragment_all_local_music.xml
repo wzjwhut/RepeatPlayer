@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     >
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.appcompat.widget.RecyclerView
         xmlns:recyclerView="http://schemas.android.com/apk/res-auto"
         android:id="@+id/recycler_view"
         android:layout_width="match_parent"
@@ -44,7 +44,7 @@
             tools:text="A"
             />
 
-        <android.support.v7.widget.AppCompatImageView
+        <androidx.appcompat.widget.AppCompatImageView
             xmlns:appCompat="http://schemas.android.com/apk/res-auto"
             android:id="@+id/handle"
             android:layout_width="wrap_content"

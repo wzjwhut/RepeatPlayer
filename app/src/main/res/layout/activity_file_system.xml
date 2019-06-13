@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
 
-    <android.support.design.widget.AppBarLayout
+    <androidx.coordinatorlayout.widget.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         >
 
-        <android.support.v7.widget.Toolbar
+        <androidx.appcompat.widget.Toolbar
             style="@style/MP.Theme.Widget.Toolbar"
             />
-    </android.support.design.widget.AppBarLayout>
+    </androidx.coordinatorlayout.widget.AppBarLayout>
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.appcompat.widget.RecyclerView
         xmlns:recyclerView="http://schemas.android.com/apk/res-auto"
         style="@style/MP.Theme.Widget.RecyclerView"
         android:paddingTop="@dimen/mp.padding.large"
@@ -31,4 +31,4 @@
         android:text="@string/mp.local_files.file_system.empty"
         tools:visibility="visible"
         />
-</android.support.design.widget.CoordinatorLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
