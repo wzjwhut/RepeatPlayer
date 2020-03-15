@@ -50,7 +50,7 @@ import rx.functions.Action1;
 public class MusicPlayerFragment extends BaseFragment implements MusicPlayerContract.View, IPlayback.Callback {
 
     // private static final String TAG = "MusicPlayerFragment";
-    private final static Logger logger = LogManager.getLogger("wzj");
+    private final static Logger logger = LogManager.getLogger("MusicPlayerFragment");
 
     // Update seek bar every second
     private static final long UPDATE_PROGRESS_INTERVAL = 1000;
@@ -193,21 +193,12 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
 
         if (mPlayer == null) return;
 
-        exitRepeatMode();
+        stopRepeat();
 
         if (mPlayer.isPlaying()) {
             mPlayer.pause();
         } else {
             mPlayer.play();
-        }
-    }
-
-    private void exitRepeatMode(){
-        if(mIsRepeating) {
-            mIsRepeating = false;
-            textViewRepeatTitle.setText("复读");
-            buttonRepeatToggle.setImageResource(R.drawable.ic_pause);
-            mHandler.removeCallbacks(mRepeatRunnable);
         }
     }
 
@@ -229,7 +220,7 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
     private void entryRepeatMode(int currentPlayPosMS){
         int beginPosMS = 0;
         int endPosMS = 0;
-        logger.info("current playMS: {}", currentPlayPosMS);
+        logger.info("[entryRepeatMode] current playMS: {}", currentPlayPosMS);
         for(Integer point : mPlayPoints){
             if(point>currentPlayPosMS){
                 endPosMS = point;
@@ -265,10 +256,16 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
         mHandler.postDelayed(mRepeatRunnable, duration);
     }
 
+    @Override
+    public void onDestroy() {
+        logger.info("onDestroy");
+        super.onDestroy();
+    }
+
     private void entryRepeatModeLast(int currentPlayPosMS){
         int beginPosMS = 0;
         int endPosMS = 0;
-        logger.info("current playMS: {}", currentPlayPosMS);
+        logger.info("[entryRepeatModeLast] current playMS: {}", currentPlayPosMS);
         int i = 0;
         for(Integer point : mPlayPoints){
             if(point>currentPlayPosMS){
@@ -277,7 +274,7 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
             i++;
         }
         if(i == 0){
-            exitRepeatMode();
+            stopRepeat();
             return;
         }
 
@@ -294,7 +291,7 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
         int duration = endPosMS - beginPosMS;
         if(duration<=0){
             Toast.makeText(getContext(), "复读时间太短", Toast.LENGTH_SHORT).show();
-            exitRepeatMode();
+            stopRepeat();
             return;
         }
 
@@ -315,7 +312,7 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
     private void entryRepeatModeNext(int currentPlayPosMS){
         int beginPosMS = 0;
         int endPosMS = 0;
-        logger.info("current playMS: {}", currentPlayPosMS);
+        logger.info("[entryRepeatModeNext] current playMS: {}", currentPlayPosMS);
         int i = 0;
         for(Integer point : mPlayPoints){
             if(point>currentPlayPosMS){
@@ -326,7 +323,7 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
         }
         if(i>=mPlayPoints.size()){
             Toast.makeText(getContext(), "复读时间太短", Toast.LENGTH_SHORT).show();
-            exitRepeatMode();
+            stopRepeat();
             return;
         }
         endPosMS = mPlayPoints.get((i+1));
@@ -339,7 +336,7 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
         int duration = endPosMS - beginPosMS;
         if(duration<=0){
             Toast.makeText(getContext(), "复读时间太短", Toast.LENGTH_SHORT).show();
-            exitRepeatMode();
+            stopRepeat();
             return;
         }
 
@@ -386,7 +383,7 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
         }
 
         mPlayer.pause();
-        exitRepeatMode();
+        stopRepeat();
 
         if(mPlayPoints == null || mPlayPoints.isEmpty()){
             onRepeatToggleAction(view);
@@ -406,11 +403,12 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
 
     @OnClick(R.id.button_repeat_last)
     public void onRepeatLast(final View view){
+        logger.info("onRepeatLast");
         if(mPlayer.getPlayingSong() == null){
             return;
         }
         mPlayer.pause();
-        exitRepeatMode();
+        stopRepeat();
         if(mPlayPoints == null || mPlayPoints.isEmpty()){
             logger.info("split point not exist");
             onRepeatToggleAction(view);
@@ -427,6 +425,71 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
         entryRepeatModeLast(playPos);
     }
 
+    private void stopRepeat() {
+        logger.info("exit repeat mode");
+        textViewRepeatTitle.setText("复读");
+        buttonRepeatToggle.setImageResource(R.drawable.ic_play);
+        mIsRepeating = false;
+        mHandler.removeCallbacks(mRepeatRunnable);
+    }
+
+    private void startRepeat() {
+        if(mIsRepeating) {
+            return;
+        }
+        logger.info("try to entry repeat mode");
+        buttonRepeatToggle.setImageResource(R.drawable.ic_pause);
+        mIsRepeating = true;
+
+        final int playPos;
+        if(mPlayer.isPlaying()){
+            playPos = mPlayer.getProgress();
+        }else{
+            playPos = mPlayingPosMS;
+        }
+        //进入复读模式.
+        mPlayer.pause();
+
+        final String playingPath = mPlayer.getPlayingSong().getPath();
+        if(mPlayPoints == null || !playingPath.equals(mPlayingPath)){
+            SentenceSplitPoint point = LiteOrmHelper.getInstance().queryById(playingPath, SentenceSplitPoint.class);
+            if(point != null){
+                logger.info("get break points success {}", playingPath);
+                mPlayPoints = point.getBreakPoints();
+                mPlayingPath = playingPath;
+            }
+        }
+
+        if(mPlayPoints != null) {
+            entryRepeatMode(playPos);
+        }else{
+            //Toast.makeText(getContext(), "正在分析, 请稍候", Toast.LENGTH_LONG).show();
+            showProgressDialog(getContext(), "正在分析, 请稍候");
+            final SplitMP3Sentence praser = new SplitMP3Sentence(playingPath);
+            praser.setOnCompleteListener(new SplitMP3Sentence.OnCompleteListener() {
+                @Override
+                public void completed() {
+                    List<Integer> points =  praser.getSplitPointsList();
+                    if(points == null || points.isEmpty()){
+                        Toast.makeText(getContext(), "分析失败", Toast.LENGTH_SHORT).show();
+                    }else{
+                        Toast.makeText(getContext(), "分析成功", Toast.LENGTH_SHORT).show();
+                        SentenceSplitPoint point = new SentenceSplitPoint();
+                        point.setPath(playingPath);
+                        point.setPoints(StringUtils.join(points, ','));
+                        LiteOrmHelper.getInstance().save(point);
+                        mPlayPoints = point.getBreakPoints();
+                        mPlayingPath = playingPath;
+                        logger.info("get points success, points count: {}", points.size());
+                        entryRepeatMode(playPos);
+                    }
+                    dismissProgressDialog();
+                }
+            });
+            praser.start();
+        }
+    }
+
     @OnClick(R.id.button_repeat_toggle)
     public void onRepeatToggleAction(View view) {
         logger.info("click repeat");
@@ -436,63 +499,9 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
 
         if(mIsRepeating){
            //退出复读模式
-            logger.info("exit repeat mode");
-            textViewRepeatTitle.setText("复读");
-            buttonRepeatToggle.setImageResource(R.drawable.ic_play);
-            mIsRepeating = false;
-            mHandler.removeCallbacks(mRepeatRunnable);
+            stopRepeat();
         }else{
-            logger.info("try to entry repeat mode");
-            buttonRepeatToggle.setImageResource(R.drawable.ic_pause);
-            mIsRepeating = true;
-
-            final int playPos;
-            if(mPlayer.isPlaying()){
-                playPos = mPlayer.getProgress();
-            }else{
-                playPos = mPlayingPosMS;
-            }
-            //进入复读模式.
-            mPlayer.pause();
-
-            final String playingPath = mPlayer.getPlayingSong().getPath();
-            if(mPlayPoints == null || !playingPath.equals(mPlayingPath)){
-                SentenceSplitPoint point = LiteOrmHelper.getInstance().queryById(playingPath, SentenceSplitPoint.class);
-                if(point != null){
-                    logger.info("get break points success {}", playingPath);
-                    mPlayPoints = point.getBreakPoints();
-                    mPlayingPath = playingPath;
-                }
-            }
-
-            if(mPlayPoints != null) {
-                entryRepeatMode(playPos);
-            }else{
-                //Toast.makeText(getContext(), "正在分析, 请稍候", Toast.LENGTH_LONG).show();
-                showProgressDialog(getContext(), "正在分析, 请稍候");
-                final SplitMP3Sentence praser = new SplitMP3Sentence(playingPath);
-                praser.setOnCompleteListener(new SplitMP3Sentence.OnCompleteListener() {
-                    @Override
-                    public void completed() {
-                        List<Integer> points =  praser.getSplitPointsList();
-                        if(points == null || points.isEmpty()){
-                            Toast.makeText(getContext(), "分析失败", Toast.LENGTH_SHORT).show();
-                        }else{
-                            Toast.makeText(getContext(), "分析成功", Toast.LENGTH_SHORT).show();
-                            SentenceSplitPoint point = new SentenceSplitPoint();
-                            point.setPath(playingPath);
-                            point.setPoints(StringUtils.join(points, ','));
-                            LiteOrmHelper.getInstance().save(point);
-                            mPlayPoints = point.getBreakPoints();
-                            mPlayingPath = playingPath;
-                            logger.info("get points success, points count: {}", points.size());
-                            entryRepeatMode(playPos);
-                        }
-                        dismissProgressDialog();
-                    }
-                });
-                praser.start();
-            }
+            startRepeat();
         }
     }
 
@@ -510,7 +519,7 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
     @OnClick(R.id.button_play_last)
     public void onPlayLastAction(View view) {
         if (mPlayer == null) return;
-
+        stopRepeat();
         mPlayer.playLast();
     }
 
@@ -518,81 +527,9 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
     public void onPlayNextAction(View view) {
         if (mPlayer == null) return;
 
+        stopRepeat();
         mPlayer.playNext();
     }
-
-//    @OnClick(R.id.button_favorite_toggle)
-//    public void onFavoriteToggleAction(View view) {
-//        if (mPlayer == null) return;
-//
-//        Song currentSong = mPlayer.getPlayingSong();
-//        if (currentSong != null) {
-//            view.setEnabled(false);
-//            mPresenter.setSongAsFavorite(currentSong, !currentSong.isFavorite());
-//        }
-//    }
-
-//    @OnClick(R.id.button_3_sec)
-//    public void on3Sec(View view) {
-//        repeatPlaySec(3);
-//    }
-//
-//    @OnClick(R.id.button_5_sec)
-//    public void on5Sec(View view) {
-//        repeatPlaySec(5);
-//    }
-//
-//    @OnClick(R.id.button_8_sec)
-//    public void on8Sec(View view) {
-//        repeatPlaySec(8);
-//    }
-//
-//    @OnClick(R.id.button_10_sec)
-//    public void on10Sec(View view) {
-//        repeatPlaySec(10);
-//    }
-//
-//    private void repeatPlaySec(int sec){
-//        if(mPlayer.getPlayingSong() == null){
-//            return;
-//        }
-//        if(mIsRepeating){
-//            return;
-//        }
-//        logger.info("try to entry repeat mode");
-//
-//        final int currentPlayPosMS;
-//        if(mPlayer.isPlaying()){
-//            currentPlayPosMS = mPlayer.getProgress();
-//        }else{
-//            currentPlayPosMS = mPlayingPosMS;
-//        }
-//        //进入复读模式.
-//        mPlayer.pause();
-//
-//        int beginPosMS = currentPlayPosMS - sec*1000;
-//        if(beginPosMS < 0){
-//            beginPosMS = 0;
-//        }
-//        int endPosMS = currentPlayPosMS;
-//        int duration = endPosMS - beginPosMS;
-//        if(duration<=0){
-//            Toast.makeText(getContext(), "复读时间太短", Toast.LENGTH_SHORT).show();
-//            return;
-//        }
-//        textViewRepeatTitle.setText("正在复读: "  + TimeUtils.formatDuration(beginPosMS) + " - " + TimeUtils.formatDuration(endPosMS));
-//        buttonRepeatToggle.setImageResource(R.drawable.ic_pause);
-//        mIsRepeating = true;
-//
-//        logger.info("repeat range: {}, {}", beginPosMS, endPosMS);
-//        mRepeatBeginPos = beginPosMS;
-//        mRepeatDuration = duration;
-//        seekTo(beginPosMS);
-//        mPlayer.play();
-//        mHandler.postDelayed(mRepeatRunnable, duration);
-//    }
-
-    // RXBus Events
 
     PlayMode mPlayMode = PlayMode.getDefault();
 
@@ -631,13 +568,14 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
         PlayList playList = event.playList;
         int playIndex = event.playIndex;
         playSong(playList, playIndex);
-        exitRepeatMode();
+        stopRepeat();
     }
 
     // Music Controls
 
     private void playSong(Song song) {
         PlayList playList = new PlayList(song);
+        stopRepeat();
         playSong(playList, 0);
     }
 
@@ -645,33 +583,10 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
         if (playList == null) return;
 
         playList.setPlayMode(PreferenceManager.lastPlayMode(getActivity()));
-        // boolean result =
-        //mPlayer.setPlayList(playList);
         mPlayer.play(playList);
-        //mPlayer.play(playList, playIndex);
-
         Song song = playList.getCurrentSong();
         onSongUpdated(song);
 
-        /*
-        seekBarProgress.setProgress(0);
-        seekBarProgress.setEnabled(result);
-        textViewProgress.setText(R.string.mp_music_default_duration);
-
-        if (result) {
-            imageViewAlbum.startRotateAnimation();
-            buttonPlayToggle.setImageResource(R.drawable.ic_pause);
-            textViewDuration.setText(TimeUtils.formatDuration(song.getDuration()));
-        } else {
-            buttonPlayToggle.setImageResource(R.drawable.ic_play);
-            textViewDuration.setText(R.string.mp_music_default_duration);
-        }
-
-        mHandler.removeCallbacks(mProgressCallback);
-        mHandler.post(mProgressCallback);
-
-        getActivity().startService(new Intent(getActivity(), PlaybackService.class));
-        */
     }
 
     private void updateProgressTextWithProgress(int progress) {
@@ -727,12 +642,14 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
 
     @Override
     public void onPlayStatusChanged(boolean isPlaying) {
+        logger.info("onPlayStatusChanged: {}", isPlaying);
         updatePlayToggle(isPlaying);
+
         if (isPlaying) {
             mHandler.removeCallbacks(mProgressCallback);
             mHandler.post(mProgressCallback);
         } else {
-            mHandler.removeCallbacks(mProgressCallback);
+            stopRepeat();
         }
     }
 
@@ -771,7 +688,7 @@ public class MusicPlayerFragment extends BaseFragment implements MusicPlayerCont
     }
 
     public void onSongUpdated(@Nullable Song song) {
-        exitRepeatMode();
+        stopRepeat();
         this.mPlayPoints = null;
         if (song == null) {
             //imageViewAlbum.cancelRotateAnimation();

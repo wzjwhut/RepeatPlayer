@@ -9,7 +9,7 @@ public class Logger {
 
     public void info(String format, final Object... arguments){
         if(arguments == null || arguments.length == 0){
-            Log.i(TAG, format);
+            Log.e(TAG, format);
         }else{
             int length = arguments.length;
             if(arguments[length-1] instanceof Throwable){
@@ -18,10 +18,10 @@ public class Logger {
                 final int argCount =  arguments.length - 1;
                 StringFormatter.formatMessage(result, format, arguments, argCount);
                 String msg = result.toString();
-                Log.i(TAG, msg, (Throwable)arguments[length-1]);
+                Log.e(TAG, msg, (Throwable)arguments[length-1]);
             }else{
                 String msg = StringFormatter.format(format, arguments);
-                Log.i(TAG, msg);
+                Log.e(TAG, msg);
             }
         }
     }

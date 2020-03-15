@@ -51,9 +51,13 @@ public class FolderItemView extends RelativeLayout {
             }
             textViewInfo.setText(TimeUtils.formatDuration(duration));
         }else{
-            textViewInfo.setText(getContext().getString(
-                    R.string.mp_local_files_folder_list_item_info_formatter,
-                    folder.getNumOfSongs()));
+            if(folder.getNumOfSongs()>0) {
+                textViewInfo.setText(getContext().getString(
+                        R.string.mp_local_files_folder_list_item_info_formatter,
+                        folder.getNumOfSongs()));
+            }else{
+                textViewInfo.setText("");
+            }
         }
     }
 }
